@@ -13,9 +13,26 @@ park, offices on a kindergarten's plot.
 
 ## The map
 
-A single self-contained page — open `index.html`, or visit the published site.
-Map code, fonts and data are all inlined; the only optional external request is
-the street basemap, which is off until you switch it on.
+```
+index.html              markup only, ~7 KB
+assets/styles.css       the page's styles
+assets/app.js           filtering, map layers, the detail panel
+assets/vendor/          MapLibre GL JS and the IBM Plex faces, self-hosted
+data/*.geojson          the datasets, fetched at load
+```
+
+Nothing is loaded from a third party except the street basemap, which is off
+until you switch it on.
+
+**Previewing locally.** Because the page fetches its data, opening `index.html`
+straight from the filesystem will be blocked by the browser. Serve the folder
+instead:
+
+```bash
+python3 -m http.server 8000   # then open http://localhost:8000/
+```
+
+The page says as much if it detects the problem.
 
 - Filter by score, public-place type, **registered purpose**, ownership,
   district, or free text
@@ -33,15 +50,27 @@ section numbering:
 
 | group | parcels | |
 |---|--:|---|
-| Housing | 1,295 | `02.01` `02.02` `02.03` `02.04` `02.07` `02.10` |
+| Housing | 1,390 | `02.01` `02.02` `02.03` `02.04` `02.07` `02.10` |
 | Public common-use land | 923 | `12.13` `02.12` `18.00` `03.20` `11.07` `01.18` `16.00` |
-| Transport & utilities | 658 | `12.*` `13.*` |
-| Purpose not stated | 526 | blank, `Код не виокремлено` |
-| Commerce & offices | 423 | `03.07`–`03.10` `03.17` `12.11` |
-| Public services | 294 | `03.01`–`03.06` `03.11`–`03.16` `08.02` `10.08` |
-| Industry | 181 | `11.*` |
-| Agriculture & gardens | 66 | `01.*` |
-| Garages & parking | 38 | `02.05` `02.06` `02.09` |
+| Transport & utilities | 687 | `12.*` `13.*` |
+| Commerce & offices | 499 | `03.07`–`03.10` `03.17` `12.11` |
+| Public services | 379 | `03.01`–`03.06` `03.11`–`03.16` `08.02` `10.08` |
+| Industry | 205 | `11.*` |
+| Purpose not stated | 199 | nothing recorded at all |
+| Agriculture & gardens | 83 | `01.*` |
+| Garages & parking | 39 | `02.05` `02.06` `02.09` |
+
+Older records often carry no classifier code but do carry a free-text purpose —
+*"Роздрібної торгівлі та комерційних послуг"*, *"Житлової забудови і комерційної
+забудови"*. Those are not unknown, so they are matched on keywords and assigned
+to the group the text describes. That reclassified **327 parcels** out of an
+original 526 "not stated"; the 199 that remain record nothing at all (181 have
+an entirely empty purpose field, 18 say only *"Не визначено"* or *"Іншого
+призначення"*).
+
+Where a designation is mixed, housing outranks everything — *"житлової забудови
+і комерційної забудови"* is residential development first, which is the stronger
+signal on public ground — and industry outranks commerce.
 
 **"Public common-use land" is the group to watch.** Streets, squares,
 intra-block passages and general-use green plantings are public land by

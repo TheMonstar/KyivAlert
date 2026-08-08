@@ -1,8 +1,7 @@
-# Pipeline — not published (see README)
+# Published: index.html, assets/, data/*.geojson, data/purpose_codes.tsv
+# Not published: the pipeline that produces them.
 src/
 tools/
-web/
-public/
 requirements.txt
 .venv/
 __pycache__/
