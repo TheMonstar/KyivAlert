@@ -14,12 +14,45 @@ park, offices on a kindergarten's plot.
 ## The map
 
 A single self-contained page — open `index.html`, or visit the published site.
-Nothing is loaded from a third party at runtime.
+Map code, fonts and data are all inlined; the only optional external request is
+the street basemap, which is off until you switch it on.
 
-- Filter by score, public-place type, ownership, district, or free text
+- Filter by score, public-place type, **registered purpose**, ownership,
+  district, or free text
+- Switch the background between a plain ground and the **OpenStreetMap street
+  map**, to see what actually stands on a parcel
 - Click any parcel for its full registry record and score breakdown
 - Every parcel links out to both the cadastral map and the OSM object, so any
   claim on the map can be checked at source
+
+### Purpose groups
+
+58 distinct purpose codes occur among the flagged parcels, so they are bucketed
+into nine groups cut by what the designation *means*, not by the registry's own
+section numbering:
+
+| group | parcels | |
+|---|--:|---|
+| Housing | 1,295 | `02.01` `02.02` `02.03` `02.04` `02.07` `02.10` |
+| Public common-use land | 923 | `12.13` `02.12` `18.00` `03.20` `11.07` `01.18` `16.00` |
+| Transport & utilities | 658 | `12.*` `13.*` |
+| Purpose not stated | 526 | blank, `Код не виокремлено` |
+| Commerce & offices | 423 | `03.07`–`03.10` `03.17` `12.11` |
+| Public services | 294 | `03.01`–`03.06` `03.11`–`03.16` `08.02` `10.08` |
+| Industry | 181 | `11.*` |
+| Agriculture & gardens | 66 | `01.*` |
+| Garages & parking | 38 | `02.05` `02.06` `02.09` |
+
+**"Public common-use land" is the group to watch.** Streets, squares,
+intra-block passages and general-use green plantings are public land by
+definition; those 923 parcels are flagged on their *category*, never their
+purpose, and are the weakest hits in the set. Switch the group off to see only
+the parcels carrying an actual development designation.
+
+The background switch is off by default. Street tiles come from
+`tile.openstreetmap.org` at view time — the only runtime network request the
+page can make, and only when you ask for it. If they are blocked, the plain
+ground stays visible underneath and the map tells you the tiles did not load.
 
 ## Method
 
