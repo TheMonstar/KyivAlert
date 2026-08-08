@@ -1,121 +1,96 @@
-# KyivAlert — land-use collision detector
+# Земельні розбіжності Києва
 
-Finds Kyiv land parcels whose **registered legal purpose contradicts the public
-place OpenStreetMap maps on the same ground**: an apartment block registered
-inside a forest, retail inside a park, offices on a kindergarten's plot.
+**Kyiv land-use discrepancies — public places vs. the land cadastre.**
 
-Two stages, as separate steps: a detector script that computes the collisions,
-and a renderer that draws them.
+An interactive map of **4,404 land parcels in Kyiv whose registered legal purpose
+contradicts the park, forest, playground or school that OpenStreetMap maps on the
+same ground** — an apartment block registered inside woodland, retail inside a
+park, offices on a kindergarten's plot.
 
-**Current run: 4,404 flagged parcels out of 45,917 considered.**
-
-These are *data inconsistencies requiring review*, not evidence of wrongdoing.
-See [`data/spot_check.md`](data/spot_check.md) for the manual ground-truth and
-the standing caveats.
-
-## Setup
-
-```bash
-python3 -m venv .venv
-./.venv/bin/pip install -r requirements.txt
-
-# Preferred OSM source: one download, then everything runs locally.
-curl -o data/ukraine.osm.pbf https://download.geofabrik.de/europe/ukraine-latest.osm.pbf
-```
-
-## Run
-
-```bash
-./.venv/bin/python -m src.run          # full pipeline
-./.venv/bin/python -m src.run --skip-fetch   # recompute from cached data
-./.venv/bin/python -m src.run --overpass     # use Overpass instead of the extract
-```
-
-First run scrapes 3,025 cadastre tiles (~15 min). Tiles are cached, so every
-rerun is ~4 minutes end to end, including rereading the 872 MB extract.
-
-## Data sources
-
-**Cadastre** — `kadastrova-karta.com` Tegola vector tiles.
-
-> The tile API returns **HTTP 403 without a `Referer: https://kadastrova-karta.com/`
-> header.** That one header is the difference between working and not.
-
-Layer `land_polygons` (z11–16), read at z15 over the Kyiv bbox: 3,025 tiles →
-459,027 raw features → 394,752 unique parcels after `cadnum` dedupe. Attributes:
-`cadnum`, `ownership`, `purpose`, `purpose_code`, `area`, `category`, `address`,
-`auctions`, `land_sales`.
-
-Parcels straddling a tile boundary appear clipped in each tile, so the pieces are
-unioned per `cadnum`. Skipping this understates area by up to ~34%.
-
-**OpenStreetMap** — 12,016 public places in nine classes (park, playground,
-recreation, sport, forest, water, education, health, cemetery), plus the city
-boundary from relation 421866.
-
-Two interchangeable paths, both verified to produce identical boundary bounds:
-
-- [`src/osm_pbf.py`](src/osm_pbf.py) — pyosmium over a Geofabrik extract. Default:
-  ~2 minutes, deterministic.
-- [`src/fetch_osm.py`](src/fetch_osm.py) — Overpass API, with mirror rotation and
-  recursive bbox subdivision. Fallback, no download needed, but the public
-  mirrors return 429s and 504s under load and this took hours in testing.
-
-## How a collision is decided
-
-All rules live in [`src/rules.py`](src/rules.py) and nowhere else.
-
-1. **Ownership filter** — drop `Приватна власність` (86% of parcels; the expected
-   background). Keeps `Комунальна`, `Державна`, `Не визначено`.
-2. **Positive evidence required.** A collision needs either
-   - a **development purpose** (`02.*` housing, `03.07` retail, `03.10` offices)
-     registered on any public place — the strong signal; or
-   - a **development land category** (civic, industrial, agricultural) on open
-     green space (park, forest, water, recreation).
-
-   Institutional grounds (school, hospital, cemetery, sports, playground) are
-   never condemned by category alone — a military academy legitimately sits on
-   land categorised *"…оборони…"*. A blank category is missing data, not a
-   contradiction.
-3. **Geometry floor** — overlap must exceed 100 m² *and* 10% of the parcel,
-   computed in EPSG:32636. This discarded 10,857 of 15,913 intersecting pairs;
-   without it, digitising slivers along shared edges are 68% of the output.
-4. **Score 0–100** from overlap share, overlap size, evidence strength, place
-   type, ownership, and whether the parcel is under auction or up for sale.
-
-`data/purpose_codes.tsv` is written on every run: all 128 codes present in the
-data with counts and sample text. The section numbering in these tiles does not
-match the published KVCPZ ordering (`11.02` is manufacturing, `12.04` is road
-transport), so codes are read from the data rather than assumed.
-
-## Output
-
-| file | what |
-|---|---|
-| `data/collisions.geojson` | flagged parcels, scored, with per-collision detail |
-| `data/parcels.geojson` | all 394,752 parcels (full-city baseline, 380 MB) |
-| `data/public_places.geojson` | the 12,016 OSM polygons |
-| `data/purpose_codes.tsv` | every purpose code in the data, with counts |
-| `web/index.html` | self-contained map page (10.3 MB) |
+> These are **data inconsistencies requiring review, not evidence of wrongdoing.**
+> The map shows a disagreement between two records. That is a starting point for
+> enquiry, not a conclusion.
 
 ## The map
 
-[`web/index.html`](web/index.html) is a single file — MapLibre, both fonts and all
-three datasets inlined, because the Artifact CSP blocks every external request.
-Filter by score, place type, ownership, district, or free text; click a parcel
-for its full registry record, score breakdown, and deep links to both the
-cadastral map and the OSM object.
+A single self-contained page — open `index.html`, or visit the published site.
+Nothing is loaded from a third party at runtime.
 
-`tools/shoot.py` renders it headless and fails on any console error:
+- Filter by score, public-place type, ownership, district, or free text
+- Click any parcel for its full registry record and score breakdown
+- Every parcel links out to both the cadastral map and the OSM object, so any
+  claim on the map can be checked at source
 
-```bash
-./.venv/bin/python tools/shoot.py dark select
-./.venv/bin/python tools/shoot.py light
-```
+## Method
 
-## Courtesy
+Parcel boundaries and registry attributes come from the State Land Cadastre via
+kadastrova-karta.com vector tiles, read across 3,025 tiles covering Kyiv. Public
+places come from OpenStreetMap: 12,016 polygons in nine classes (park,
+playground, recreation, sport, forest, water, education, health, cemetery),
+clipped to the city boundary.
 
-The cadastre scrape is ~3,000 requests against a small public service, at 8
-workers, cached after the first run. Please don't parallelise it harder.
+Of 394,752 parcels mapped across the Kyiv area, privately-owned ones are set
+aside as the expected background; 45,917 in communal, state or unstated
+ownership fall inside the city boundary and are examined.
 
-Data: OpenStreetMap contributors (ODbL) · kadastrova-karta.com
+A parcel is flagged only on **positive evidence** of a contradiction — either a
+development purpose registered on it (housing, retail, offices), or a
+development land category on open green space. A blank registry field is missing
+data, not a contradiction, and never flags.
+
+Overlaps are computed in UTM zone 36N and must exceed both 100 m² and 10% of the
+parcel; below that the two datasets' independent digitising produces slivers
+along every shared edge, which would otherwise be about two thirds of the output.
+
+Parcel geometry reconstructed from the tiles agrees with the cadastre's own
+declared areas to **within ±0.6%**, which validates the whole decoding path.
+
+## Known limits
+
+- OSM draws a university or hospital as **one polygon over the whole campus**, so
+  parcels inside it all read as "inside a school" — and a student dormitory is
+  lawfully registered as an apartment building. Treat the education and health
+  hits as needing building-level checking. The forest and park hits do not have
+  this problem.
+- An OSM park tag may predate a lawful rezoning.
+- Cadastral geometry is generalised in vector tiles, so overlap areas are
+  approximate.
+- OSM is crowd-sourced; boundaries carry no legal weight.
+
+## The data
+
+The derived datasets behind the map are published alongside it, so results can be
+checked and reused without rerunning anything:
+
+| file | contents |
+|---|---|
+| `data/collisions.geojson` | the 4,404 flagged parcels, scored, each with its full registry record and every public place it overlaps |
+| `data/public_places.geojson` | the 12,016 OSM public-place polygons, classified and clipped to the city |
+| `data/kyiv_boundary.geojson` | the city boundary used for clipping (OSM relation 421866) |
+| `data/purpose_codes.tsv` | every one of the 128 purpose codes present in the cadastre data, with counts and sample text |
+
+The 380 MB full-city parcel baseline and the 832 MB OpenStreetMap extract are not
+committed — they are bulk inputs, regenerable from the sources named below.
+
+Note that the purpose-code section numbering in these tiles does **not** match the
+published KVCPZ ordering (`11.02` is manufacturing, `12.04` is road transport), so
+codes were read from the data rather than assumed. `purpose_codes.tsv` is the
+reference for what each code actually means here.
+
+## Data & attribution
+
+- Public places and the city boundary: **© OpenStreetMap contributors**, licensed
+  under the [Open Database License (ODbL)](https://www.openstreetmap.org/copyright).
+- Parcel boundaries and registry attributes: State Land Cadastre of Ukraine, via
+  [kadastrova-karta.com](https://kadastrova-karta.com).
+- Map rendering: [MapLibre GL JS](https://maplibre.org) (3-Clause BSD).
+- Typeface: [IBM Plex](https://github.com/IBM/plex) (SIL Open Font License 1.1).
+
+Derived data shown here is a produced work from an ODbL database; reuse should
+carry the same attribution.
+
+## Corrections
+
+If a parcel is shown wrongly — a rezoning the map missed, an OSM boundary that is
+out of date, a misread record — please open an issue with the cadastral number.
+Corrections are welcome and expected.

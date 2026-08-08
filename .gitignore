@@ -1,0 +1,28 @@
+# Pipeline — not published (see README)
+src/
+tools/
+web/
+public/
+requirements.txt
+.venv/
+__pycache__/
+*.pyc
+
+# Bulk inputs and intermediates: far too large for git, and regenerable from
+# the sources documented in the README.
+# NOTE: git has no inline comments — a trailing "# ..." becomes part of the
+# pattern and silently disables the rule. Keep comments on their own lines.
+
+# 832 MB Geofabrik extract
+data/ukraine.osm.pbf
+
+# 380 MB full-city parcel baseline
+data/parcels.geojson
+
+# 3,025 cached cadastre tiles + Overpass responses
+data/cache/
+
+data/shots/
+data/*.log
+
+.DS_Store
