@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="A parcel outline overlapping green space">
+  <rect width="32" height="32" rx="6" fill="#12191C"/>
+  <!-- green space -->
+  <path d="M3 20c4-6 8-3 12-8 3-4 9-5 14-3v20H3z" fill="#4C7A4E"/>
+  <!-- the flagged parcel sitting on it -->
+  <path d="M11 11h13v13H11z" fill="#A81E17" fill-opacity=".9" stroke="#E24B3F" stroke-width="1.5"/>
+</svg>

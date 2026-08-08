@@ -1,3 +1,4 @@
+<!doctype html>
 <!-- Земельні розбіжності Києва — public places vs. the land cadastre.
      Styles live in assets/styles.css, behaviour in assets/app.js, and the
      datasets in data/*.geojson, fetched at load. Because the data is fetched,
@@ -5,17 +6,86 @@
      will be blocked by the browser's same-origin rules. To preview locally:
          python3 -m http.server 8000
      then open http://localhost:8000/ -->
+<!-- Running text is English; Ukrainian strings are marked lang="uk" inline. -->
+<html lang="en">
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Земельні розбіжності Києва — public places vs. cadastre</title>
-<meta name="description" content="Kyiv land parcels whose registered legal purpose contradicts the park, forest, playground or school mapped on the same ground.">
+
+<title>Земельні розбіжності Києва — Kyiv parks vs. the land cadastre</title>
+<meta name="description" content="Interactive map of 4,404 Kyiv land parcels registered for housing, retail or offices on ground OpenStreetMap maps as park, forest or playground.">
+<link rel="canonical" href="https://themonstar.github.io/KyivAlert/">
+<meta name="theme-color" content="#1F6273">
+
+<!-- Social cards. og:image must be absolute — relative paths are ignored by
+     Twitter and Facebook. assets/og.png is generated from the live map by
+     tools/make_og.py, so the preview is always the real thing. -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Земельні розбіжності Києва">
+<meta property="og:url" content="https://themonstar.github.io/KyivAlert/">
+<meta property="og:title" content="Земельні розбіжності Києва — Kyiv parks vs. the land cadastre">
+<meta property="og:description" content="4,404 Kyiv land parcels are registered for housing, retail or offices on ground the city maps as parkland. Every one is checkable against the source registry.">
+<meta property="og:image" content="https://themonstar.github.io/KyivAlert/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Map of Kyiv with 4,404 flagged land parcels marked in orange and red against the city's green space.">
+<meta property="og:locale" content="uk_UA">
+<meta property="og:locale:alternate" content="en_GB">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Земельні розбіжності Києва — Kyiv parks vs. the land cadastre">
+<meta name="twitter:description" content="4,404 Kyiv land parcels are registered for housing, retail or offices on ground the city maps as parkland. Every one is checkable against the source registry.">
+<meta name="twitter:image" content="https://themonstar.github.io/KyivAlert/assets/og.png">
+<meta name="twitter:image:alt" content="Map of Kyiv with 4,404 flagged land parcels marked in orange and red against the city's green space.">
+
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 
 <link rel="stylesheet" href="assets/vendor/maplibre-gl.css">
 <link rel="stylesheet" href="assets/vendor/fonts.css">
 <link rel="stylesheet" href="assets/styles.css">
 
+<!-- This publishes a dataset, so it is described as one. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Dataset",
+  "name": "Земельні розбіжності Києва — Kyiv land-use discrepancies",
+  "description": "4,404 Kyiv land parcels whose registered legal purpose in the State Land Cadastre contradicts the park, forest, playground or school that OpenStreetMap maps on the same ground.",
+  "url": "https://themonstar.github.io/KyivAlert/",
+  "license": "https://opendatacommons.org/licenses/odbl/1-0/",
+  "isAccessibleForFree": true,
+  "keywords": [
+    "Kyiv", "Київ", "land cadastre", "земельний кадастр", "OpenStreetMap",
+    "urban green space", "parks", "land use", "open data"
+  ],
+  "spatialCoverage": {
+    "@type": "Place",
+    "name": "Kyiv, Ukraine",
+    "geo": {
+      "@type": "GeoShape",
+      "box": "50.21 30.24 50.59 30.83"
+    }
+  },
+  "distribution": [
+    {
+      "@type": "DataDownload",
+      "encodingFormat": "application/geo+json",
+      "contentUrl": "https://themonstar.github.io/KyivAlert/data/collisions.geojson"
+    },
+    {
+      "@type": "DataDownload",
+      "encodingFormat": "application/geo+json",
+      "contentUrl": "https://themonstar.github.io/KyivAlert/data/public_places.geojson"
+    }
+  ],
+  "creator": { "@type": "Person", "name": "TheMonstar" }
+}
+</script>
+</head>
+<body>
+
 <div id="loading" role="status">
-  <p class="label">Земельні розбіжності Києва</p>
+  <p class="label" lang="uk">Земельні розбіжності Києва</p>
   <p id="loading-msg">Loading the cadastre and OpenStreetMap data…</p>
   <p id="loading-hint">
     If this page was opened straight from the file system, the browser will
@@ -27,8 +97,8 @@
 <div id="app">
   <div id="rail">
     <header>
-      <p class="label" style="color:var(--accent)">Kyiv · OSM × Державний земельний кадастр</p>
-      <h1>Земельні розбіжності</h1>
+      <p class="label">Kyiv · OSM × <span lang="uk">Державний земельний кадастр</span></p>
+      <h1 lang="uk">Земельні розбіжності</h1>
       <p class="sub">
         Public land parcels whose registered legal purpose contradicts the park,
         playground, forest or school that OpenStreetMap maps on the same ground.
@@ -155,3 +225,6 @@
 
 <script src="assets/vendor/maplibre-gl.js"></script>
 <script src="assets/app.js"></script>
+
+</body>
+</html>
